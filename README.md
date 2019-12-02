@@ -31,4 +31,35 @@ Some failed approaches are given below:
   
 ## Form Field Segmentation
 
+The general algorithmic approach to segment out the form fields is given below:
 
+  1. First of all, I read the image and rotate it as per the alignment code given right in above part.
+  2. Then there may be many illumination variations across the image which would distort the thresholding. Therefore what I did is to find out the illumination distribution and divide the image by it to get a uniform illumination image
+  3. Then I convert that image into gray-scale and then binarize it as per a thresholding value found by applying locally adaptive thresholding (the statistical method found most suitable was ‘mean’)
+  4. Then, its 8 connected components are obtained and it’s regionprops are calculated and labelled. This regionprops is stored in a table and from this, all the information of the components like their centroids, areas etc. can be obtained
+  5. Then, from the image, a pattern was observed that in the bottom left region, the eccentricities of the non-field regions are very high. So, we remove some highest eccentricity components from the image.
+  6. Then, a similar procedure is carried out on the image obtained above, but with a change that we take some highest area components in the output image.
+  7. In the final image, the number of 8-connected components left were very less.
+   
+## Character Detection
+
+Some of the fields would have characters written in them, while others do not. Here the task is to find a way to isolate these characters and label them as distinct connected components. The general algorithmic approach for this is given below
+
+  1. There may be many illumination variations across the image which would distort the thresholding. Therefore what we do is find out the illumination distribution and divide the image by it to get a uniform illumination image.
+  2. Then we use Otsu’s method to threshold the image and get a binary image. We then take the complement of the image so that low intensity parts of the image such as the characters become white and others become black.
+  3. Then we use regionprops to identify the 8 connected components. Then we display only those bounding boxes which have appropriate size and area. We are not able to segment characters that are connected to the field boxes. That is why we do some dilation and erosion to negate this effect.
+  4. Then I use the form field segmentation technique above to keep only those bounding boxes that have at least 3 white pixels in the field segmented image.
+  5. Since the zoom of every image is different we had to use different parameters for different images.
+  6. For the printed images and scanned images I also had to align them using our alignment function made in part 1 of the assignment and also had to crop the images to suitable size so that we get effective segmentation.
+
+## Seperating special characters from the alpha-numeric ones
+
+The form fields might also include some special characters as well (Like pre-printed slashes for the dates to be entered) and they show up in the character segmentation as well. So, the job of this part is to automatically remove them. The below method is described for the slashes which are the most common special characters in forms. But similar methods can also be developed for other special characters
+
+  1. Firstly I use the same steps of uniformize illumination, thresholding, dilation, erosion and identifying the 8 connected components using regionprops as written in above part
+  2. What I noticed was that the slashes were at about a third and two thirds from the edge of a form field box in all the types of images (For the DD/MM/YYY format)
+  3. Now I used the form field segmentation algorithm of the the second part to find out the length and the position of the form fields.
+  4. Then I removed those connected components that were at about one thirds and two thirds distance from the left edge of the form field box within a threshold of about 3 pixels.
+  5. This ensured that we did not get slashes but the downside was that sometimes when some character was too close to the slash, it was also being removed
+  
+A failed approach in this case was that, Knowing that bounding boxes containing slashes have very small area, it was tried to put a lower bound on the area of the bounding boxes which did work but it also led to the bounding boxes of ‘1’ disappearing and thus some other approach was required
